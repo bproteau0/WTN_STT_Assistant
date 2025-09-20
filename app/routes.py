@@ -1,8 +1,12 @@
-from flask import render_template
+from flask import render_template, redirect
 from app import app
 
 @app.route("/")
 @app.route("/index")
 def index():
-    user = {'username': 'bproteau0'}
-    return render_template('index.html', title='WTN Assistant', user=user)
+    return redirect('/chat')
+
+@app.route("/search")
+@app.route("/chat")
+def chat():
+    return render_template('chat.html')
