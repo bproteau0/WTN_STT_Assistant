@@ -1,0 +1,1 @@
+FLASK_APP=WTN_Assistant.py
