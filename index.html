@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sustainable Trails AI Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-3xl mx-auto p-4 sm:p-6 md:p-8">
+    <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">Sustainable Trails AI</h1>
+        <p class="text-gray-500 mt-2">AI-powered answers from the Sustainable Trails Toolbox and the wider web.</p>
+      </div>
+
+      <!-- Input Form -->
+      <form id="query-form" class="mb-6">
+        <div class="relative">
+          <input type="text" id="user-query" placeholder="Ask a question..." class="w-full pl-4 pr-12 py-3 bg-gray-50 border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" required>
+          <button type="submit" class="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-white bg-green-600 hover:bg-green-700 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </button>
+        </div>
+      </form>
+
+      <!-- Responses Container -->
+      <div id="response-container" class="hidden space-y-4">
+        <!-- STT Accordion -->
+        <div class="border rounded-lg">
+          <button class="accordion-toggle w-full flex justify-between items-center px-4 py-2 text-left font-semibold text-gray-800 bg-green-100 hover:bg-green-200">
+            <span>STT Response</span>
+            <svg class="accordion-icon w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <div class="accordion-content px-4 py-3">
+            <div id="stt-response" class="prose max-w-none text-gray-700"></div>
+            <div id="stt-sources" class="mt-4 hidden">
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Sources</h3>
+              <ul id="stt-sources-list" class="list-disc list-inside text-sm space-y-1"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Web Accordion -->
+        <div class="border rounded-lg">
+          <button class="accordion-toggle w-full flex justify-between items-center px-4 py-2 text-left font-semibold text-gray-800 bg-blue-100 hover:bg-blue-200">
+            <span>Web Response</span>
+            <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <div class="accordion-content hidden px-4 py-3">
+            <div id="web-response" class="prose max-w-none text-gray-700"></div>
+            <div id="web-sources" class="mt-4 hidden">
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">Sources</h3>
+              <ul id="web-sources-list" class="list-disc list-inside text-sm space-y-1"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loader -->
+      <div id="loader" class="hidden flex justify-center items-center mt-8">
+        <div class="loader"></div>
+        <p class="ml-4 text-gray-600">Searching...</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+const queryForm = document.getElementById('query-form');
+const userQueryInput = document.getElementById('user-query');
+const responseContainer = document.getElementById('response-container');
+const loader = document.getElementById('loader');
+
+const sttResponse = document.getElementById('stt-response');
+const sttSources = document.getElementById('stt-sources');
+const sttSourcesList = document.getElementById('stt-sources-list');
+
+const webResponse = document.getElementById('web-response');
+const webSources = document.getElementById('web-sources');
+const webSourcesList = document.getElementById('web-sources-list');
+
+const GEMINI_API_KEY = "...";
+const GOOGLE_API_KEY = "...";
+const SEARCH_ENGINE_ID = "...";
+
+// Accordion toggle
+function setupAccordions() {
+  document.querySelectorAll('.accordion-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const content = toggle.nextElementSibling;
+      const icon = toggle.querySelector('.accordion-icon');
+      content.classList.toggle('hidden');
+      icon.classList.toggle('rotate-180');
+    });
+  });
+}
+setupAccordions();
+
+// Keyword extraction via Gemini
+async function extractKeywords(query) {
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+  const prompt = `Extract 3–5 impactful keywords or short phrases from: "${query}". Keep multi-word concepts together. Return as comma-separated list.`;
+  const payload = { contents: [{ parts: [{ text: prompt }] }] };
+  const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return text.split(",").map(k => k.trim()).filter(k => k);
+}
+
+// STT Search with keywords
+async function callSTTKeywordSearch(keywords) {
+  const resultsMap = new Map();
+  for (const phrase of keywords) {
+    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(phrase)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) continue;
+    const data = await resp.json();
+    (data.items || []).forEach(item => {
+      if (!resultsMap.has(item.link)) {
+        resultsMap.set(item.link, { title: item.title, uri: item.link });
+      }
+    });
+  }
+  return Array.from(resultsMap.values());
+}
+
+// Gemini call
+async function callGeminiAPI(query, systemPromptText, allowWebSearch = false) {
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+  const payload = {
+    contents: [{ parts: [{ text: query }] }],
+    systemInstruction: { parts: [{ text: systemPromptText }] }
+  };
+  if (allowWebSearch) payload.tools = [{ google_search: {} }];
+  const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  return await res.json();
+}
+
+// Display results in accordion
+function displayResult(container, sourcesContainer, sourcesList, apiResult) {
+  const candidate = apiResult.candidates?.[0];
+  if (candidate && candidate.content?.parts?.[0]?.text) {
+    const rawText = candidate.content.parts[0].text;
+    container.innerHTML = marked.parse(rawText);
+    const groundingMetadata = candidate.groundingMetadata;
+    if (groundingMetadata?.groundingAttributions?.length) {
+      sourcesList.innerHTML = '';
+      groundingMetadata.groundingAttributions.forEach(attr => {
+        if (attr.web?.uri && attr.web?.title) {
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="${attr.web.uri}" target="_blank" class="text-green-600 hover:underline">${attr.web.title}</a>`;
+          sourcesList.appendChild(li);
+        }
+      });
+      sourcesContainer.classList.remove('hidden');
+    }
+  } else {
+    container.innerHTML = `<p class='text-gray-600'>No response generated.</p>`;
+  }
+}
+
+// Handle query
+queryForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const query = userQueryInput.value.trim();
+  if (!query) return;
+  loader.classList.remove('hidden');
+  responseContainer.classList.add('hidden');
+  sttResponse.innerHTML = '';
+  webResponse.innerHTML = '';
+
+  try {
+    // 1. Extract keywords
+    const keywords = await extractKeywords(query);
+    const sttSourcesData = await callSTTKeywordSearch(keywords);
+
+    // 2. Fail if no STT sources
+    if (sttSourcesData.length === 0) {
+      sttResponse.innerHTML = `<div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded'>I couldn't find any resources from the Sustainable Trails Toolbox regarding this question. Do you have any other questions?</div>`;
+    } else {
+      let groundingContext = `You are the interface for an improved querying interface for the Sustainable Trails Toolbox (STT) (which is also unofficially known as the “Natasha Luzhkova Digital Library” and the “Natasha Luzhkova Trails & Sustainability Toolbox”).
+In your responses, I expect you to answer in short 3-4 sentence summaries. Additionally, keep responses to 3-4 bullet points at most. Cite all sources used at the bottom of the response with links.
+If you cannot find any useful information regarding the query, please do not make a response. Instead, please simply respond with the following: "I couldn't find any resources regarding this question. Do you have any other questions?"
+Please attempt to maintain a professional tone and always answer with sustainability in mind. Relevant pages: `;
+      sttSourcesData.forEach(r => groundingContext += `- ${r.title}: ${r.uri}\n`);
+      const sttResult = await callGeminiAPI(query, groundingContext);
+      displayResult(sttResponse, sttSources, sttSourcesList, sttResult);
+    }
+
+    // 3. Web response (auto-collapsed)
+    const webPrompt = `You are the interface for an improved querying interface for the Sustainable Trails Toolbox (STT) (which is also unofficially known as the “Natasha Luzhkova Digital Library” and the “Natasha Luzhkova Trails & Sustainability Toolbox”).
+In your responses, I expect you to answer in short 3-4 sentence summaries. Additionally, keep responses to 3-4 bullet points at most. Cite all sources used at the bottom of the response with links.
+If you cannot find any useful information regarding the query, please do not make a response. Instead, please simply respond with the following: "I couldn't find any resources regarding this question. Do you have any other questions?"
+Please attempt to maintain a professional tone and always answer with sustainability in mind.`;
+    const webResult = await callGeminiAPI(query, webPrompt, true);
+    displayResult(webResponse, webSources, webSourcesList, webResult);
+
+    responseContainer.classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+    sttResponse.innerHTML = `<p class='text-red-500'>Error: ${err.message}</p>`;
+  } finally {
+    loader.classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
