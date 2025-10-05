@@ -33,7 +33,7 @@
         <div class="border rounded-lg mb-4 mt-4">
           <button class="accordion-toggle w-full flex justify-between items-center px-4 py-2 text-left font-semibold text-gray-600 hover:bg-green-200">
             <span>Welcome to the NL Digital Library AI Tool!</span>
-            <svg class="accordion-icon w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
           <div class="accordion-content hidden px-4 py-3">
             <p class="text-gray-600 text-sm">This tool was built to help improve accessibility to global trail information. To use it, simply enter your question or topic of interest—such as trail sustainability, community engagement, accessibility, or recreation management—and the system will search its curated collection of resources to provide clear, evidence-based answers. It connects you with relevant research, case studies, and best practices from both the NL-Digital Library and the external internet, making it easier to design, manage, or study trails with both ecological and social considerations in mind. To add a source to the NL-Digital Library, please see the link to the google form at the bottom of the page. Thank you! </p>
@@ -41,58 +41,49 @@
         </div>
 
       <!-- Input Form -->
-      <form id="query-form" class="mb-6">
-        <div class="relative">
-          <input type="text" id="user-query" placeholder="Ask a question..." class="w-full pl-4 pr-12 py-3 bg-gray-50 border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" required>
-          <button type="submit" class="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-white bg-green-600 hover:bg-green-700 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" /></svg>
-          </button>
-        </div>
-      </form>
+      <div class="relative">
+        <input type="text" id="user-query" placeholder="Ask a question..." class="w-full pl-4 pr-12 py-3 bg-gray-50 border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none" required>
+        <button id="submit-button" class="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-white bg-green-600 hover:bg-green-700 rounded-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+
+      <!-- Loader -->
+      <div id="loader" class="hidden flex justify-center items-center mt-8 mb-8">
+        <div class="loader"></div>
+        <p class="ml-4 text-gray-600">Searching...</p>
+      </div>
 
       <!-- Responses Container -->
       <div id="response-container" class="hidden space-y-4">
+
         <!-- NLDL Accordion -->
-        <div class="border rounded-lg text-left">
+        <div class="border rounded-lg text-left mt-3 mb-3">
           <button class="accordion-toggle w-full flex justify-between items-center px-4 py-2 text-left font-semibold text-gray-800 bg-green-100 hover:bg-green-200">
-            <span>NLDL Response</span>
+            <span>Response from NLDL sources</span>
             <svg class="accordion-icon w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
           <div class="accordion-content px-4 py-3">
             <div id="NLDL-response" class="prose max-w-none prose-a:text-blue-600 text-gray-700"></div>
-            <div id="NLDL-sources" class="mt-4 hidden">
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">Sources</h3>
-              <ul id="NLDL-sources-list" class="list-disc list-inside text-sm space-y-1"></ul>
-            </div>
           </div>
         </div>
 
         <!-- Web Accordion -->
-        <div class="border rounded-lg text-left">
+        <div class="border rounded-lg text-left mt-3 mb-3">
           <button class="accordion-toggle w-full flex justify-between items-center px-4 py-2 text-left font-semibold text-gray-800 bg-blue-100 hover:bg-blue-200">
-            <span>Web Response</span>
-            <svg class="accordion-icon w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <span>Response from sources on the web</span>
+            <svg class="accordion-icon w-5 h-5 transform transition-transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
           </button>
-          <div class="accordion-content hidden px-4 py-3">
+          <div class="accordion-content px-4 py-3">
             <div id="web-response" class="prose max-w-none prose-a:text-blue-600 text-gray-700"></div>
-            <div id="web-sources" class="mt-4 hidden">
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">Sources</h3>
-              <ul id="web-sources-list" class="list-disc list-inside text-sm space-y-1"></ul>
-            </div>
           </div>
         </div>
       </div>
 
       <!-- Sources Link -->
-       <div class="text-center">
-        <a class="text-blue-500 mt-2" href="https://forms.gle/Mku7Zv3JgMvQGVRy7" target="_blank" rel="noopener noreferrer">Found a source online which seems useful? Add it here!</a>
+       <div class="text-center mt-3">
+        <a class="text-blue-600 mt-2 underline;" href="https://forms.gle/Mku7Zv3JgMvQGVRy7" target="_blank" rel="noopener noreferrer">Found a source online which seems useful? Add it here!</a>
        </div>
-
-      <!-- Loader -->
-      <div id="loader" class="hidden flex justify-center items-center mt-8">
-        <div class="loader"></div>
-        <p class="ml-4 text-gray-600">Searching...</p>
-      </div>
     </div>
   </div>
 
@@ -102,17 +93,13 @@ const userQueryInput = document.getElementById('user-query');
 const responseContainer = document.getElementById('response-container');
 const loader = document.getElementById('loader');
 
-const sttResponse = document.getElementById('NLDL-response');
+const NLDLResponse = document.getElementById('NLDL-response');
 const sttSources = document.getElementById('NLDL-sources');
 const sttSourcesList = document.getElementById('NLDL-sources-list');
 
 const webResponse = document.getElementById('web-response');
 const webSources = document.getElementById('web-sources');
 const webSourcesList = document.getElementById('web-sources-list');
-
-const GEMINI_API_KEY = "{{gem_key}}";
-const GOOGLE_API_KEY = "{{ggl_key}}";
-const SEARCH_ENGINE_ID = "{{ggl_id}}";
 
 // Accordion toggle
 function setupAccordions() {
@@ -127,117 +114,21 @@ function setupAccordions() {
 }
 setupAccordions();
 
-// Keyword extraction via Gemini
-async function extractKeywords(query) {
-  console.log(query)
-
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
-  const prompt = `Extract 3-5 impactful keywords or short phrases from: "${query}". Keep multi-word concepts together. Return as comma-separated list. If the language of the query is not English, then add English translations of each keyword to the list as well.`;
-  const payload = { contents: [{ parts: [{ text: prompt }] }] };
-  const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  return text.split(",").map(k => k.trim()).filter(k => k);
-}
-
-// NLDL Search with keywords
-async function callSTTKeywordSearch(keywords) {
-  const resultsMap = new Map();
-  for (const phrase of keywords) {
-    const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(phrase)}`;
-    const resp = await fetch(url);
-    if (!resp.ok) continue;
-    const data = await resp.json();
-    (data.items || []).forEach(item => {
-      if (!resultsMap.has(item.link)) {
-        resultsMap.set(item.link, { title: item.title, uri: item.link });
-      }
-    });
-  }
-  return Array.from(resultsMap.values());
-}
-
-// Gemini call
-async function callGeminiAPI(query, systemPromptText, allowWebSearch = false) {
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
-  const payload = {
-    contents: [{ parts: [{ text: query }] }],
-    systemInstruction: { parts: [{ text: systemPromptText }] }
-  };
-  if (allowWebSearch) payload.tools = [{ google_search: {} }];
-  const res = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-  return await res.json();
-}
-
-// Display results in accordion
-function displayResult(container, sourcesContainer, sourcesList, apiResult) {
-  const candidate = apiResult.candidates?.[0];
-  if (candidate && candidate.content?.parts?.[0]?.text) {
-    const rawText = candidate.content.parts[0].text;
-    container.innerHTML = marked.parse(rawText);
-//    const groundingMetadata = candidate.groundingMetadata;
-//    if (groundingMetadata?.groundingAttributions?.length) {
-//      sourcesList.innerHTML = '';
-//      groundingMetadata.groundingAttributions.forEach(attr => {
-//        if (attr.web?.uri && attr.web?.title) {
-//          const li = document.createElement('li');
-//          li.innerHTML = `<a href="${attr.web.uri}" target="_blank" class="text-green-600 hover:underline">${attr.web.title}</a>`;
-//          sourcesList.appendChild(li);
-//        }
-//      });
-//      sourcesContainer.classList.remove('hidden');
-//    }
-  } else {
-    container.innerHTML = `<p class='text-gray-600'>No response generated.</p>`;
-  }
-}
+{% if response %}
+loader.classList.add('hidden');
+responseContainer.classList.remove('hidden');
+NLDLResponse.innerHTML = marked.parse(`{{NLDL_response_content}}`);
+webResponse.innerHTML = marked.parse(`{{web_response_content}}`);
+{% else %}
+responseContainer.classList.add('hidden');
+{% endif %}
 
 // Handle query
-queryForm.addEventListener('submit', async e => {
-  e.preventDefault();
-  const query = userQueryInput.value.trim();
-  if (!query) return;
+document.getElementById("submit-button").addEventListener('click', async e => {
+  var query = document.getElementById("user-query").value;
+  var thisLocation = window.location.toString();
   loader.classList.remove('hidden');
-  responseContainer.classList.add('hidden');
-  sttResponse.innerHTML = '';
-  webResponse.innerHTML = '';
-
-  try {
-    // 1. Extract keywords
-    const keywords = await extractKeywords(query);
-
-    console.log(`Extracted Keywords: ${keywords}`)
-
-    const sttSourcesData = await callSTTKeywordSearch(keywords);
-
-    // 2. Fail if no NLDL sources
-    if (sttSourcesData.length === 0) {
-      sttResponse.innerHTML = `<div class='bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded'>I couldn't find any resources from the Sustainable Trails Toolbox regarding this question. Do you have any other questions?</div>`;
-    } else {
-      let groundingContext = `You are the interface for an improved querying interface for the Sustainable Trails Toolbox (STT) (which is also unofficially known as the “Natasha Luzhkova Digital Library” and the “Natasha Luzhkova Trails & Sustainability Toolbox”).
-In your responses, I expect you to answer in short 3-4 sentence summaries. Additionally, keep responses to 3-4 bullet points at most. Cite all sources used at the bottom of the response with embedded links in markdown format in a bulleted list. 
-If you cannot find any useful information regarding the query, please do not make a response. Instead, please simply respond with the following: "I couldn't find any resources regarding this question. Do you have any other questions?"
-Please attempt to maintain a professional tone and always answer with sustainability in mind. Relevant pages: `;
-      sttSourcesData.forEach(r => groundingContext += `- ${r.title}: ${r.uri}\n`);
-      const sttResult = await callGeminiAPI(query, groundingContext);
-      displayResult(sttResponse, sttSources, sttSourcesList, sttResult);
-    }
-
-    // 3. Web response (auto-collapsed)
-    const webPrompt = `You are the interface for an improved querying interface for the Sustainable Trails Toolbox (STT) (which is also unofficially known as the “Natasha Luzhkova Digital Library” and the “Natasha Luzhkova Trails & Sustainability Toolbox”).
-In your responses, I expect you to answer in short 3-4 sentence summaries. Additionally, keep responses to 3-4 bullet points at most. Cite all sources used at the bottom of the response with embedded links in markdown format in a bulleted list. 
-If you cannot find any useful information regarding the query, please do not make a response. Instead, please simply respond with the following: "I couldn't find any resources regarding this question. Do you have any other questions?"
-Please attempt to maintain a professional tone and always answer with sustainability in mind. Ensure that all sources used are properly cited, since it is VERY IMPORTANT that users know where the information is coming from.`;
-    const webResult = await callGeminiAPI(query, webPrompt, true);
-    displayResult(webResponse, webSources, webSourcesList, webResult);
-
-    responseContainer.classList.remove('hidden');
-  } catch (err) {
-    console.error(err);
-    sttResponse.innerHTML = `<p class='text-red-500'>Error: ${err.message}</p>`;
-  } finally {
-    loader.classList.add('hidden');
-  }
+  window.location.replace(thisLocation.replace(/\/[^/]*$/, `/${query}`));
 });
 </script>
 </body>
